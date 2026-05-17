@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 공유 캘린더</title>
+    <title>캘린더</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -14,36 +14,36 @@
 
     <div id="auth-screen" class="flex min-h-screen items-center justify-center p-4">
         <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-            <h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">실시간 공유 캘린더</h1>
-            <div class="space-y-4">
+            <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600 tracking-tight">캘린더</h1>
+            <div class="space-y-5">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">닉네임 (방 이름)</label>
-                    <input type="text" id="nickname-input" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="예: 우리가족달력">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">닉네임</label>
+                    <input type="text" id="nickname-input" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="닉네임을 입력하세요">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">인증코드 (비밀번호)</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">인증코드</label>
                     <input type="password" id="authcode-input" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="인증코드를 입력하세요">
                 </div>
                 <div class="flex gap-4 pt-4">
-                    <button id="btn-create" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">새 캘린더 생성</button>
-                    <button id="btn-join" class="flex-1 bg-white border-2 border-indigo-500 text-indigo-500 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg transition duration-200">캘린더 접속</button>
+                    <button id="btn-create" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg transition duration-200">새 캘린더 생성</button>
+                    <button id="btn-join" class="flex-1 bg-white border-2 border-indigo-500 text-indigo-500 hover:bg-indigo-50 font-semibold py-2.5 px-4 rounded-lg transition duration-200">캘린더 접속</button>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="calendar-screen" class="hidden min-h-screen flex-col items-center py-8 p-4">
-        <div class="w-full max-w-4xl bg-white p-6 rounded-xl shadow-lg">
+        <div class="w-full max-w-5xl bg-white p-6 rounded-xl shadow-lg">
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <h2 class="text-xl font-bold text-gray-800"><span id="display-nickname" class="text-indigo-600"></span>님의 캘린더</h2>
-                <button id="btn-logout" class="text-sm text-gray-500 hover:text-red-500 transition duration-200">나가기</button>
+                <button id="btn-logout" class="text-sm text-gray-500 hover:text-red-500 transition duration-200 font-semibold">나가기</button>
             </div>
             <div class="flex justify-between items-center mb-4">
-                <button id="btn-prev-month" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full">&lt; 이전</button>
-                <h3 id="current-month-year" class="text-lg font-semibold"></h3>
-                <button id="btn-next-month" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full">다음 &gt;</button>
+                <button id="btn-prev-month" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-600 transition duration-150">&lt; 이전</button>
+                <h3 id="current-month-year" class="text-xl font-bold text-gray-800"></h3>
+                <button id="btn-next-month" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold text-gray-600 transition duration-150">다음 &gt;</button>
             </div>
-            <div class="grid grid-cols-7 gap-2 mb-2 text-center font-semibold text-gray-600">
+            <div class="grid grid-cols-7 gap-2 mb-2 text-center font-bold text-gray-600">
                 <div class="text-red-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-500">토</div>
             </div>
             <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
@@ -51,32 +51,33 @@
     </div>
 
     <div id="event-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
-            <h3 class="text-lg font-bold mb-4" id="modal-title">일정 추가</h3>
+        <div class="bg-white p-7 rounded-xl shadow-2xl w-full max-w-md">
+            <h3 class="text-xl font-bold mb-5 text-gray-800" id="modal-title">일정 추가</h3>
             
-            <input type="text" id="event-input" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none mb-4" placeholder="일정 이름 (예: 가족 여행)" required>
+            <input type="text" id="event-input" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none mb-5 font-medium" placeholder="일정 이름 (예: 가족 여행)" required>
             
-            <label class="flex items-center mb-4 cursor-pointer w-fit">
-                <input type="checkbox" id="is-allday" class="w-4 h-4 text-indigo-600 rounded cursor-pointer">
-                <span class="ml-2 text-sm font-semibold text-gray-700">하루종일 (시간 입력 안 함)</span>
+            <label class="flex items-center mb-5 cursor-pointer w-fit group">
+                <input type="checkbox" id="is-allday" class="w-5 h-5 text-indigo-600 rounded cursor-pointer border-gray-300 focus:ring-indigo-500">
+                <span class="ml-2 text-sm font-bold text-gray-700 group-hover:text-indigo-600 transition-colors">하루종일 (시간 생략)</span>
             </label>
 
-            <div class="flex flex-col gap-3 mb-6 bg-gray-50 p-3 rounded-lg border">
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-sm font-bold text-gray-600 w-8">시작</span>
-                    <input type="date" id="start-date" class="px-2 py-1 border rounded focus:outline-none focus:border-indigo-500 text-sm">
-                    <input type="time" id="start-time" class="px-2 py-1 border rounded focus:outline-none focus:border-indigo-500 text-sm w-24">
+            <div class="flex flex-col gap-4 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <p class="text-xs text-gray-500 font-semibold mb-[-8px]">💡 숫자를 누르고 키보드로 직접 시간을 입력할 수도 있습니다.</p>
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-sm font-bold text-gray-700 w-8">시작</span>
+                    <input type="date" id="start-date" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm w-full">
+                    <input type="time" id="start-time" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm w-full cursor-text">
                 </div>
-                <div class="flex items-center justify-between gap-2">
-                    <span class="text-sm font-bold text-gray-600 w-8">종료</span>
-                    <input type="date" id="end-date" class="px-2 py-1 border rounded focus:outline-none focus:border-indigo-500 text-sm">
-                    <input type="time" id="end-time" class="px-2 py-1 border rounded focus:outline-none focus:border-indigo-500 text-sm w-24">
+                <div class="flex items-center justify-between gap-3">
+                    <span class="text-sm font-bold text-gray-700 w-8">종료</span>
+                    <input type="date" id="end-date" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm w-full">
+                    <input type="time" id="end-time" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm w-full cursor-text">
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2">
-                <button id="btn-close-modal" class="px-4 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-150">취소</button>
-                <button id="btn-save-event" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition duration-150">저장</button>
+            <div class="flex justify-end gap-3 mt-2">
+                <button id="btn-close-modal" class="px-5 py-2.5 text-gray-700 bg-gray-200 hover:bg-gray-300 font-bold rounded-lg transition duration-200">취소</button>
+                <button id="btn-save-event" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg transition duration-200">일정 저장</button>
             </div>
         </div>
     </div>
@@ -85,7 +86,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
     <script>
-        // 파이어베이스 설정 (기존과 동일)
         const firebaseConfig = {
             apiKey: "AIzaSyB9kupArquAXbcZPGMkopPhkpWO3LYQ15Q",
             authDomain: "calendar-9e360.firebaseapp.com",
@@ -98,13 +98,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // 전역 상태 변수
         let currentCalendar = null; 
         let currentCalendarData = null; 
         let currentDate = new Date(); 
         let unsubscribe = null; 
 
-        // DOM 요소 모음
         const authScreen = document.getElementById('auth-screen');
         const calendarScreen = document.getElementById('calendar-screen');
         const nicknameInput = document.getElementById('nickname-input');
@@ -121,7 +119,6 @@
         const endDateInput = document.getElementById('end-date');
         const endTimeInput = document.getElementById('end-time');
 
-        // [하루종일] 체크 시 시간 입력칸 숨기기/보이기 로직
         isAllDayCheck.addEventListener('change', (e) => {
             if (e.target.checked) {
                 startTimeInput.classList.add('opacity-30', 'pointer-events-none');
@@ -132,14 +129,12 @@
             }
         });
 
-        // 시작 날짜를 바꾸면 종료 날짜도 자동으로 맞춰주는 편의 기능
         startDateInput.addEventListener('change', (e) => {
             if(endDateInput.value < e.target.value) {
                 endDateInput.value = e.target.value;
             }
         });
 
-        // 생성 버튼
         document.getElementById('btn-create').addEventListener('click', async () => {
             const nickname = nicknameInput.value.trim();
             const authcode = authcodeInput.value.trim();
@@ -150,14 +145,13 @@
                 const docSnap = await docRef.get();
                 if (docSnap.exists) return alert("이미 존재하는 닉네임입니다.");
 
-                await docRef.set({ authCode: authcode, eventList: [] }); // 구조 변경: eventList 배열 사용
+                await docRef.set({ authCode: authcode, eventList: [] });
                 enterCalendar(nickname);
             } catch (error) {
                 alert("생성 중 오류가 발생했습니다.");
             }
         });
 
-        // 접속 버튼
         document.getElementById('btn-join').addEventListener('click', async () => {
             const nickname = nicknameInput.value.trim();
             const authcode = authcodeInput.value.trim();
@@ -189,7 +183,6 @@
             unsubscribe = docRef.onSnapshot((docSnap) => {
                 if (docSnap.exists) {
                     currentCalendarData = docSnap.data();
-                    // 이전 버전 데이터가 있으면 빈 배열로 처리하여 에러 방지
                     if(!Array.isArray(currentCalendarData.eventList)) {
                         currentCalendarData.eventList = [];
                     }
@@ -206,7 +199,6 @@
             authScreen.classList.remove('hidden');
         });
 
-        // 캘린더 화면 렌더링
         function renderCalendar() {
             if (!currentCalendarData) return;
 
@@ -221,27 +213,25 @@
 
             for (let i = 0; i < firstDay; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.className = "h-28 bg-gray-50 border border-gray-100 rounded-lg";
+                emptyCell.className = "h-32 bg-gray-50 border border-gray-100 rounded-lg";
                 calendarGrid.appendChild(emptyCell);
             }
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateCell = document.createElement('div');
-                dateCell.className = "h-28 border border-gray-200 rounded-lg p-1 flex flex-col hover:bg-indigo-50 cursor-pointer transition duration-150 overflow-y-auto no-scrollbar relative";
+                dateCell.className = "h-32 border border-gray-200 rounded-lg p-1.5 flex flex-col hover:bg-indigo-50 cursor-pointer transition duration-150 overflow-y-auto no-scrollbar relative shadow-sm";
                 
                 const monthStr = String(month + 1).padStart(2, '0');
                 const dayStr = String(day).padStart(2, '0');
                 const fullDateStr = `${year}-${monthStr}-${dayStr}`;
 
                 const dayNumber = document.createElement('span');
-                dayNumber.className = "text-sm font-semibold mb-1 " + (new Date(year, month, day).getDay() === 0 ? "text-red-500" : new Date(year, month, day).getDay() === 6 ? "text-blue-500" : "text-gray-700");
+                dayNumber.className = "text-sm font-extrabold mb-1 " + (new Date(year, month, day).getDay() === 0 ? "text-red-500" : new Date(year, month, day).getDay() === 6 ? "text-blue-500" : "text-gray-700");
                 dayNumber.innerText = day;
                 dateCell.appendChild(dayNumber);
 
-                // 현재 렌더링 중인 날짜에 포함되는 일정 필터링
                 const todaysEvents = eventList.filter(ev => fullDateStr >= ev.startDate && fullDateStr <= ev.endDate);
 
-                // 정렬: 하루종일 일정이 위로, 그 다음 시간순
                 todaysEvents.sort((a, b) => {
                     if (a.isAllDay && !b.isAllDay) return -1;
                     if (!a.isAllDay && b.isAllDay) return 1;
@@ -251,30 +241,40 @@
                 todaysEvents.forEach(ev => {
                     const eventItem = document.createElement('div');
                     
-                    // 하루종일 일정은 초록색, 시간 일정은 남색으로 디자인 차별화
                     eventItem.className = ev.isAllDay 
-                        ? "text-[11px] bg-green-100 text-green-800 rounded px-1 py-0.5 mb-1 w-full leading-tight truncate border border-green-200"
-                        : "text-[11px] bg-indigo-100 text-indigo-800 rounded px-1 py-0.5 mb-1 w-full leading-tight truncate";
+                        ? "text-[11px] bg-green-100 text-green-800 rounded px-1.5 py-1 mb-1 w-full leading-tight truncate border border-green-200"
+                        : "text-[11px] bg-indigo-100 text-indigo-800 rounded px-1.5 py-1 mb-1 w-full leading-tight truncate font-medium";
                     
-                    // ★ 마우스 호버 시 뜨는 툴팁(title 속성) 설정
                     const tooltipText = ev.isAllDay 
                         ? `[${ev.title}]\n시작: ${ev.startDate} (하루종일)\n종료: ${ev.endDate} (하루종일)`
                         : `[${ev.title}]\n시작: ${ev.startDate} ${ev.startTime}\n종료: ${ev.endDate} ${ev.endTime}`;
                     eventItem.setAttribute('title', tooltipText);
 
-                    // 셀에 표시될 텍스트
+                    // ★ 다중 날짜 일정 텍스트 렌더링 로직 (피드백 완벽 반영)
+                    let displayText = '';
                     if (ev.isAllDay) {
-                        eventItem.innerHTML = `<span class="font-bold mr-1">하루종일</span>${ev.title}`;
+                        displayText = `<span class="font-bold mr-1">하루종일</span>${ev.title}`;
                     } else {
-                        eventItem.innerHTML = `<span class="font-bold mr-1">${ev.startTime}</span>${ev.title}`;
+                        if (fullDateStr === ev.startDate && fullDateStr === ev.endDate) {
+                            // 당일치기 일정 (시작 시간만 표시)
+                            displayText = `<span class="font-extrabold mr-1 text-indigo-600">${ev.startTime}</span>${ev.title}`;
+                        } else if (fullDateStr === ev.startDate) {
+                            // 다중 날짜 - 시작하는 날
+                            displayText = `<span class="font-extrabold mr-1 text-indigo-600">${ev.startTime}</span>${ev.title}`;
+                        } else if (fullDateStr === ev.endDate) {
+                            // 다중 날짜 - 끝나는 날
+                            displayText = `<span class="font-extrabold mr-1 text-red-500">${ev.endTime}</span>${ev.title}`;
+                        } else {
+                            // 다중 날짜 - 중간에 끼인 날 (시간 수식 없음)
+                            displayText = `${ev.title}`;
+                        }
                     }
 
-                    // 이벤트 버블링 방지 (일정을 눌렀을 때 모달이 또 뜨지 않게)
+                    eventItem.innerHTML = displayText;
                     eventItem.addEventListener('click', (e) => e.stopPropagation());
                     dateCell.appendChild(eventItem);
                 });
 
-                // 빈 칸 클릭 시 모달 열기
                 dateCell.addEventListener('click', () => openModal(fullDateStr));
                 calendarGrid.appendChild(dateCell);
             }
@@ -283,15 +283,13 @@
         document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
         document.getElementById('btn-next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
 
-        // 모달 열기 로직
         function openModal(dateStr) {
             eventInput.value = ''; 
             
-            // 기본값: 현재 시간 채워주기
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            const endNow = new Date(now.getTime() + 60 * 60 * 1000); // 종료 시간은 1시간 뒤로 기본 세팅
+            const endNow = new Date(now.getTime() + 60 * 60 * 1000); 
             const endHours = String(endNow.getHours()).padStart(2, '0');
             const endMinutes = String(endNow.getMinutes()).padStart(2, '0');
 
@@ -301,7 +299,6 @@
             endTimeInput.value = `${endHours}:${endMinutes}`;
 
             isAllDayCheck.checked = false;
-            // 체크박스 수동 트리거로 시간 인풋 활성화
             isAllDayCheck.dispatchEvent(new Event('change'));
 
             eventModal.classList.remove('hidden');
@@ -312,7 +309,6 @@
             eventModal.classList.add('hidden');
         });
 
-        // [저장] 버튼: 여러 날짜/시간 데이터 저장
         document.getElementById('btn-save-event').addEventListener('click', async () => {
             const title = eventInput.value.trim();
             const startDate = startDateInput.value;
@@ -321,7 +317,6 @@
             const endTime = endTimeInput.value;
             const isAllDay = isAllDayCheck.checked;
 
-            // 유효성 검사
             if (!title) return alert("일정 이름을 입력하세요.");
             if (!startDate || !endDate) return alert("날짜를 정확히 선택하세요.");
             if (!isAllDay && (!startTime || !endTime)) return alert("시작 및 종료 시간을 입력하세요.");
@@ -334,7 +329,7 @@
             }
 
             const newEvent = {
-                id: Date.now().toString(), // 고유 ID
+                id: Date.now().toString(),
                 title: title,
                 startDate: startDate,
                 endDate: endDate,
