@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 공유 캘린더</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+
+    <!-- 1. 메인 화면 -->
+    <div id="auth-screen" class="flex min-h-screen items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+            <h1 class="text-2xl font-bold text-center mb-6 text-indigo-600">실시간 공유 캘린더</h1>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">닉네임 (방 이름)</label>
+                    <input type="text" id="nickname-input" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="예: 우리가족달력">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">인증코드 (비밀번호)</label>
+                    <input type="password" id="authcode-input" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="인증코드를 입력하세요">
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button id="btn-create" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">새 캘린더 생성</button>
+                    <button id="btn-join" class="flex-1 bg-white border-2 border-indigo-500 text-indigo-500 hover:bg-indigo-50 font-semibold py-2 px-4 rounded-lg transition duration-200">캘린더 접속</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 캘린더 화면 -->
+    <div id="calendar-screen" class="hidden min-h-screen flex-col items-center py-8 p-4">
+        <div class="w-full max-w-4xl bg-white p-6 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h2 class="text-xl font-bold text-gray-800"><span id="display-nickname" class="text-indigo-600"></span>님의 캘린더</h2>
+                <button id="btn-logout" class="text-sm text-gray-500 hover:text-red-500 transition duration-200">나가기</button>
+            </div>
+            <div class="flex justify-between items-center mb-4">
+                <button id="btn-prev-month" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full">&lt; 이전</button>
+                <h3 id="current-month-year" class="text-lg font-semibold"></h3>
+                <button id="btn-next-month" class="p-2 bg-gray-100 hover:bg-gray-200 rounded-full">다음 &gt;</button>
+            </div>
+            <div class="grid grid-cols-7 gap-2 mb-2 text-center font-semibold text-gray-600">
+                <div class="text-red-500">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="text-blue-500">토</div>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+        </div>
+    </div>
+
+    <!-- 3. 일정 추가 모달 -->
+    <div id="event-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+            <h3 class="text-lg font-bold mb-4" id="modal-date-title">일정 추가</h3>
+            <div class="flex gap-2 mb-4">
+                <input type="time" id="event-time" class="w-1/3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                <input type="text" id="event-input" class="w-2/3 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="일정 내용" required>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="btn-close-modal" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">취소</button>
+                <button id="btn-save-event" class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ★ 수정된 부분: 로컬(file://)에서도 잘 돌아가는 Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // 알려주신 Firebase 설정 적용
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9kupArquAXbcZPGMkopPhkpWO3LYQ15Q",
+            authDomain: "calendar-9e360.firebaseapp.com",
+            projectId: "calendar-9e360",
+            storageBucket: "calendar-9e360.firebasestorage.app",
+            messagingSenderId: "28217808964",
+            appId: "1:28217808964:web:16a28f364feb97bd8ac411"
+        };
+
+        // Firebase 초기화
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 앱 상태 관리
+        let currentCalendar = null; 
+        let currentCalendarData = null; 
+        let currentDate = new Date(); 
+        let selectedDateString = null; 
+        let unsubscribe = null; 
+
+        // DOM 요소
+        const authScreen = document.getElementById('auth-screen');
+        const calendarScreen = document.getElementById('calendar-screen');
+        const nicknameInput = document.getElementById('nickname-input');
+        const authcodeInput = document.getElementById('authcode-input');
+        const displayNickname = document.getElementById('display-nickname');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const currentMonthYear = document.getElementById('current-month-year');
+        const eventModal = document.getElementById('event-modal');
+        const eventInput = document.getElementById('event-input');
+        const eventTime = document.getElementById('event-time');
+        const modalDateTitle = document.getElementById('modal-date-title');
+
+        // [방 생성] 버튼 클릭 이벤트
+        document.getElementById('btn-create').addEventListener('click', async () => {
+            const nickname = nicknameInput.value.trim();
+            const authcode = authcodeInput.value.trim();
+            if (!nickname || !authcode) return alert("닉네임과 인증코드를 모두 입력해주세요.");
+
+            try {
+                const docRef = db.collection("calendars").doc(nickname);
+                const docSnap = await docRef.get();
+
+                if (docSnap.exists) {
+                    alert("이미 존재하는 닉네임입니다. 다른 이름을 사용하거나 접속해주세요.");
+                    return;
+                }
+
+                await docRef.set({ authCode: authcode, events: {} });
+                enterCalendar(nickname);
+            } catch (error) {
+                console.error("에러 발생:", error);
+                alert("서버 오류가 발생했습니다. 파이어베이스 데이터베이스(Firestore)가 생성되었는지 확인해주세요.");
+            }
+        });
+
+        // [방 접속] 버튼 클릭 이벤트
+        document.getElementById('btn-join').addEventListener('click', async () => {
+            const nickname = nicknameInput.value.trim();
+            const authcode = authcodeInput.value.trim();
+            if (!nickname || !authcode) return alert("닉네임과 인증코드를 모두 입력해주세요.");
+
+            try {
+                const docRef = db.collection("calendars").doc(nickname);
+                const docSnap = await docRef.get();
+
+                if (!docSnap.exists) {
+                    alert("존재하지 않는 캘린더입니다.");
+                    return;
+                }
+
+                const data = docSnap.data();
+                if (data.authCode !== authcode) {
+                    alert("인증코드가 일치하지 않습니다.");
+                    return;
+                }
+
+                enterCalendar(nickname);
+            } catch (error) {
+                console.error("에러 발생:", error);
+                alert("접속 중 오류가 발생했습니다.");
+            }
+        });
+
+        // 캘린더 입장 및 실시간 동기화
+        function enterCalendar(nickname) {
+            currentCalendar = nickname;
+            displayNickname.innerText = nickname;
+            nicknameInput.value = ''; authcodeInput.value = '';
+            
+            authScreen.classList.add('hidden');
+            calendarScreen.classList.remove('hidden');
+            calendarScreen.classList.add('flex');
+            currentDate = new Date();
+
+            const docRef = db.collection("calendars").doc(nickname);
+            unsubscribe = docRef.onSnapshot((docSnap) => {
+                if (docSnap.exists) {
+                    currentCalendarData = docSnap.data();
+                    renderCalendar(); 
+                }
+            });
+        }
+
+        // 나가기 버튼
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            if (unsubscribe) unsubscribe(); 
+            currentCalendar = null;
+            currentCalendarData = null;
+            calendarScreen.classList.add('hidden');
+            calendarScreen.classList.remove('flex');
+            authScreen.classList.remove('hidden');
+        });
+
+        // 달력 그리기
+        function renderCalendar() {
+            if (!currentCalendarData) return;
+
+            calendarGrid.innerHTML = ''; 
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth(); 
+            currentMonthYear.innerText = `${year}년 ${month + 1}월`;
+
+            const firstDay = new Date(year, month, 1).getDay(); 
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); 
+            const eventsData = currentCalendarData.events || {};
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "h-28 bg-gray-50 border border-gray-100 rounded-lg";
+                calendarGrid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateCell = document.createElement('div');
+                dateCell.className = "h-28 border border-gray-200 rounded-lg p-1 flex flex-col hover:bg-indigo-50 cursor-pointer transition duration-150 overflow-y-auto no-scrollbar relative";
+                
+                const monthStr = String(month + 1).padStart(2, '0');
+                const dayStr = String(day).padStart(2, '0');
+                const fullDateStr = `${year}-${monthStr}-${dayStr}`;
+
+                const dayNumber = document.createElement('span');
+                dayNumber.className = "text-sm font-semibold mb-1 " + (new Date(year, month, day).getDay() === 0 ? "text-red-500" : new Date(year, month, day).getDay() === 6 ? "text-blue-500" : "text-gray-700");
+                dayNumber.innerText = day;
+                dateCell.appendChild(dayNumber);
+
+                if (eventsData[fullDateStr]) {
+                    eventsData[fullDateStr].sort((a, b) => a.time.localeCompare(b.time));
+                    eventsData[fullDateStr].forEach(eventObj => {
+                        const eventItem = document.createElement('div');
+                        eventItem.className = "text-[11px] bg-indigo-100 text-indigo-800 rounded px-1 py-0.5 mb-1 w-full leading-tight";
+                        eventItem.innerHTML = `<span class="font-bold mr-1">${eventObj.time}</span>${eventObj.text}`;
+                        dateCell.appendChild(eventItem);
+                    });
+                }
+
+                dateCell.addEventListener('click', () => openModal(fullDateStr));
+                calendarGrid.appendChild(dateCell);
+            }
+        }
+
+        document.getElementById('btn-prev-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+        document.getElementById('btn-next-month').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+
+        // 모달 로직
+        function openModal(dateStr) {
+            selectedDateString = dateStr;
+            modalDateTitle.innerText = `${dateStr} 일정 추가`;
+            eventInput.value = ''; 
+            eventTime.value = ''; 
+            eventModal.classList.remove('hidden');
+            setTimeout(() => eventTime.focus(), 50); 
+        }
+
+        document.getElementById('btn-close-modal').addEventListener('click', () => {
+            eventModal.classList.add('hidden');
+            selectedDateString = null;
+        });
+
+        // 일정 저장
+        document.getElementById('btn-save-event').addEventListener('click', async () => {
+            const text = eventInput.value.trim();
+            const time = eventTime.value; 
+
+            if (!text || !time) return alert("시간과 일정 내용을 모두 입력하세요.");
+
+            const updatedEvents = { ...currentCalendarData.events };
+            if (!updatedEvents[selectedDateString]) {
+                updatedEvents[selectedDateString] = [];
+            }
+            updatedEvents[selectedDateString].push({ time: time, text: text });
+
+            document.getElementById('btn-close-modal').click();
+
+            const docRef = db.collection("calendars").doc(currentCalendar);
+            await docRef.set({ events: updatedEvents }, { merge: true });
+        });
+    </script>
+</body>
+</html>
